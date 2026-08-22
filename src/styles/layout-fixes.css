@@ -4,6 +4,7 @@
   left: auto !important;
   inset-inline-start: auto !important;
   inset-inline-end: auto !important;
+  transition: width 0.26s cubic-bezier(.2,.8,.2,1), transform 0.28s cubic-bezier(.2,.8,.2,1) !important;
 }
 
 .dashboard-main {
@@ -11,6 +12,142 @@
   margin-left: 0 !important;
   margin-inline-start: 0 !important;
   margin-inline-end: 0 !important;
+  transition: margin-right 0.26s cubic-bezier(.2,.8,.2,1);
+}
+
+.sidebar__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar__collapse {
+  display: inline-grid !important;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+/* حالة الطي على الشاشات المكتبية. */
+.sidebar.is-collapsed {
+  width: 84px;
+  padding-inline: 12px;
+}
+
+.sidebar.is-collapsed ~ .dashboard-main {
+  margin-right: 84px !important;
+}
+
+.sidebar.is-collapsed .sidebar__head {
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  min-height: 96px;
+  margin-bottom: 15px;
+}
+
+.sidebar.is-collapsed .brand-mark {
+  justify-content: center;
+}
+
+.sidebar.is-collapsed .brand-mark__copy,
+.sidebar.is-collapsed .sidebar-upload__copy,
+.sidebar.is-collapsed .sidebar-nav__label,
+.sidebar.is-collapsed .sidebar-nav__text,
+.sidebar.is-collapsed .sidebar-storage__label,
+.sidebar.is-collapsed .sidebar-storage > small,
+.sidebar.is-collapsed .sidebar__security p,
+.sidebar.is-collapsed .sidebar-logout span,
+.sidebar.is-collapsed .sidebar__watermark span {
+  display: none !important;
+}
+
+.sidebar.is-collapsed .sidebar-upload,
+.sidebar.is-collapsed .sidebar-nav__item,
+.sidebar.is-collapsed .sidebar-logout {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar.is-collapsed .sidebar-upload {
+  min-height: 54px;
+}
+
+.sidebar.is-collapsed .sidebar-nav {
+  margin-top: 18px;
+  gap: 7px;
+}
+
+.sidebar.is-collapsed .sidebar-nav__item {
+  min-height: 46px;
+}
+
+.sidebar.is-collapsed .sidebar-storage {
+  padding: 11px 7px;
+}
+
+.sidebar.is-collapsed .sidebar-storage__head {
+  justify-content: center;
+}
+
+.sidebar.is-collapsed .sidebar-storage__head strong,
+.sidebar.is-collapsed .sidebar-storage__track {
+  display: none;
+}
+
+.sidebar.is-collapsed .sidebar__security {
+  justify-content: center;
+  padding: 9px;
+}
+
+.sidebar.is-collapsed .sidebar-logout {
+  min-height: 42px;
+}
+
+.sidebar.is-collapsed .sidebar__watermark {
+  min-height: 24px;
+}
+
+/* صفحة تسجيل الدخول: النموذج في اليمين والهوية البصرية في اليسار، مع RTL داخلي كامل. */
+.login-page {
+  direction: ltr;
+  grid-template-columns: minmax(500px, 1.15fr) minmax(410px, 0.85fr);
+  grid-template-areas: "visual panel";
+}
+
+.login-visual {
+  grid-area: visual;
+  direction: rtl;
+  text-align: right;
+}
+
+.login-panel {
+  grid-area: panel;
+  direction: rtl;
+  text-align: right;
+}
+
+.login-card,
+.login-form,
+.login-card__security,
+.config-notice,
+.field,
+.field__control {
+  direction: rtl;
+  text-align: right;
+}
+
+.login-card h2,
+.login-card > p,
+.login-card__kicker,
+.field__label {
+  text-align: right;
+}
+
+@media (max-width: 1060px) {
+  .login-page {
+    grid-template-columns: minmax(470px, 1fr) minmax(370px, 0.8fr);
+    grid-template-areas: "visual panel";
+  }
 }
 
 @media (max-width: 900px) {
@@ -24,8 +161,89 @@
     transform: translateX(0) !important;
   }
 
-  .dashboard-main {
+  .dashboard-main,
+  .sidebar.is-collapsed ~ .dashboard-main {
     margin-right: 0 !important;
     margin-left: 0 !important;
+  }
+
+  /* في الجوال تستخدم القائمة كدرج كامل، لذلك لا نطبق حالة الطي المكتبية. */
+  .sidebar.is-collapsed {
+    width: var(--sidebar-width);
+    padding: 24px 18px 18px;
+  }
+
+  .sidebar__collapse {
+    display: none !important;
+  }
+
+  .sidebar.is-collapsed .sidebar__head {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0;
+    min-height: 48px;
+    margin-bottom: 25px;
+  }
+
+  .sidebar.is-collapsed .brand-mark__copy,
+  .sidebar.is-collapsed .sidebar-upload__copy,
+  .sidebar.is-collapsed .sidebar-nav__label,
+  .sidebar.is-collapsed .sidebar-nav__text,
+  .sidebar.is-collapsed .sidebar-storage__label,
+  .sidebar.is-collapsed .sidebar-storage > small,
+  .sidebar.is-collapsed .sidebar-logout span,
+  .sidebar.is-collapsed .sidebar__watermark span {
+    display: initial !important;
+  }
+
+  .sidebar.is-collapsed .sidebar-upload__copy,
+  .sidebar.is-collapsed .sidebar__security p {
+    display: flex !important;
+  }
+
+  .sidebar.is-collapsed .sidebar-upload,
+  .sidebar.is-collapsed .sidebar-nav__item,
+  .sidebar.is-collapsed .sidebar-logout {
+    justify-content: flex-start;
+    padding-inline: 12px;
+  }
+
+  .sidebar.is-collapsed .sidebar-upload {
+    min-height: 64px;
+  }
+
+  .sidebar.is-collapsed .sidebar-nav {
+    margin-top: 28px;
+    gap: 4px;
+  }
+
+  .sidebar.is-collapsed .sidebar-nav__item {
+    min-height: 44px;
+  }
+
+  .sidebar.is-collapsed .sidebar-storage {
+    padding: 14px;
+  }
+
+  .sidebar.is-collapsed .sidebar-storage__head {
+    justify-content: space-between;
+  }
+
+  .sidebar.is-collapsed .sidebar-storage__head strong,
+  .sidebar.is-collapsed .sidebar-storage__track {
+    display: block;
+  }
+
+  .sidebar.is-collapsed .sidebar__security {
+    justify-content: flex-start;
+    padding: 11px;
+  }
+
+  .login-page {
+    direction: rtl;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "visual"
+      "panel";
   }
 }
