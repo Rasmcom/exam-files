@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { DEMO_MODE, OWNER_EMAIL } from '../lib/constants'
+import { DEMO_MODE } from '../lib/constants'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 interface AuthContextValue {
@@ -31,11 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(!DEMO_MODE)
   const [authError, setAuthError] = useState<string | null>(null)
 
-  const configMissing = !DEMO_MODE && (!isSupabaseConfigured || !OWNER_EMAIL)
+  const configMissing = !DEMO_MODE && !isSupabaseConfigured
 
   const enforceOwner = useCallback(async (nextSession: Session | null) => {
     const nextUser = nextSession?.user ?? null
-    if (nextUser && OWNER_EMAIL && nextUser.email?.toLowerCase() !== OWNER_EMAIL) {
+
+    if (!nextUser) {
+      setSession(null)
+      setUser(null)
+      setAuthError(null)
+      return
+    }
+
+    const { data: isOwner, error } = await supabase.rpc('is_portal_owner')
+
+    if (error || isOwner !== true) {
       await supabase.auth.signOut()
       setSession(null)
       setUser(null)
@@ -63,12 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
         return
       }
-      void enforceOwner(data.session).finally(() => setLoading(false))
+      void enforceOwner(data.session).finally(() => {
+        if (mounted) setLoading(false)
+      })
     })
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!mounted) return
-      void enforceOwner(nextSession)
+      window.setTimeout(() => {
+        if (mounted) void enforceOwner(nextSession)
+      }, 0)
     })
 
     return () => {
@@ -90,13 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    if (OWNER_EMAIL && email.trim().toLowerCase() !== OWNER_EMAIL) {
-      setAuthError('البريد الإلكتروني غير مصرح له بالدخول.')
-      return
-    }
-
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
     })
 
