@@ -1,0 +1,31 @@
+/* تثبيت اتجاه لوحة التحكم العربية: القائمة دائمًا في يمين الشاشة. */
+.sidebar {
+  right: 0 !important;
+  left: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+}
+
+.dashboard-main {
+  margin-right: var(--sidebar-width) !important;
+  margin-left: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    right: 0 !important;
+    left: auto !important;
+    transform: translateX(105%) !important;
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0) !important;
+  }
+
+  .dashboard-main {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+}
