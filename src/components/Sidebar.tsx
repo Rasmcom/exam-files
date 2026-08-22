@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Archive,
+  ChevronLeft,
+  ChevronRight,
   Cloud,
   Files,
   FolderKanban,
@@ -46,9 +49,29 @@ export function Sidebar({
   storageLabel,
   storagePercent,
 }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem('exam-sidebar-collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
+
   function selectView(view: DashboardView) {
     onViewChange(view)
     onClose()
+  }
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      const next = !current
+      try {
+        window.localStorage.setItem('exam-sidebar-collapsed', String(next))
+      } catch {
+        // تجاهل تعذر التخزين المحلي؛ حالة الطي ستبقى فعالة في الجلسة الحالية.
+      }
+      return next
+    })
   }
 
   return (
@@ -59,17 +82,28 @@ export function Sidebar({
         aria-label="إغلاق القائمة"
         onClick={onClose}
       />
-      <aside className={`sidebar ${open ? 'is-open' : ''}`}>
+      <aside className={`sidebar ${open ? 'is-open' : ''} ${collapsed ? 'is-collapsed' : ''}`}>
         <div className="sidebar__head">
           <BrandMark compact />
-          <button className="sidebar__close icon-button icon-button--dark" type="button" onClick={onClose}>
-            <X size={19} />
-          </button>
+          <div className="sidebar__head-actions">
+            <button
+              className="sidebar__collapse icon-button icon-button--dark"
+              type="button"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية'}
+              title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+            >
+              {collapsed ? <ChevronLeft size={19} /> : <ChevronRight size={19} />}
+            </button>
+            <button className="sidebar__close icon-button icon-button--dark" type="button" onClick={onClose}>
+              <X size={19} />
+            </button>
+          </div>
         </div>
 
-        <button type="button" className="sidebar-upload" onClick={onUpload}>
+        <button type="button" className="sidebar-upload" onClick={onUpload} title={collapsed ? 'رفع ملفات' : undefined}>
           <span className="sidebar-upload__icon"><UploadCloud size={21} /></span>
-          <span>
+          <span className="sidebar-upload__copy">
             <strong>رفع ملفات</strong>
             <small>أضف أعمالًا جديدة</small>
           </span>
@@ -86,6 +120,7 @@ export function Sidebar({
                 type="button"
                 className={`sidebar-nav__item ${active ? 'is-active' : ''}`}
                 onClick={() => selectView(item.id)}
+                title={collapsed ? item.label : undefined}
               >
                 {active && (
                   <motion.span
@@ -95,7 +130,7 @@ export function Sidebar({
                   />
                 )}
                 <Icon size={19} />
-                <span>{item.label}</span>
+                <span className="sidebar-nav__text">{item.label}</span>
               </button>
             )
           })}
@@ -105,16 +140,17 @@ export function Sidebar({
             type="button"
             className={`sidebar-nav__item ${activeView === 'settings' ? 'is-active' : ''}`}
             onClick={() => selectView('settings')}
+            title={collapsed ? 'الإعدادات' : undefined}
           >
             {activeView === 'settings' && <motion.span className="sidebar-nav__active" layoutId="sidebar-active" />}
             <Settings size={19} />
-            <span>الإعدادات</span>
+            <span className="sidebar-nav__text">الإعدادات</span>
           </button>
         </nav>
 
-        <div className="sidebar-storage">
+        <div className="sidebar-storage" title={collapsed ? `مساحة التخزين: ${storagePercent}%` : undefined}>
           <div className="sidebar-storage__head">
-            <span><Cloud size={17} /> مساحة التخزين</span>
+            <span><Cloud size={17} /><span className="sidebar-storage__label"> مساحة التخزين</span></span>
             <strong>{storagePercent}%</strong>
           </div>
           <div className="sidebar-storage__track">
@@ -127,7 +163,7 @@ export function Sidebar({
           <small>{storageLabel} مستخدمة من 5 ج.ب</small>
         </div>
 
-        <div className="sidebar__security">
+        <div className="sidebar__security" title={collapsed ? 'الحماية مفعّلة' : undefined}>
           <span><ShieldCheck size={17} /></span>
           <p>
             <strong>الحماية مفعّلة</strong>
@@ -135,14 +171,14 @@ export function Sidebar({
           </p>
         </div>
 
-        <button type="button" className="sidebar-logout" onClick={onSignOut}>
+        <button type="button" className="sidebar-logout" onClick={onSignOut} title={collapsed ? 'تسجيل الخروج' : undefined}>
           <LogOut size={18} />
           <span>تسجيل الخروج</span>
         </button>
 
         <div className="sidebar__watermark">
           <Files size={13} />
-          الإصدار 1.0
+          <span>الإصدار 1.0</span>
         </div>
       </aside>
     </>
