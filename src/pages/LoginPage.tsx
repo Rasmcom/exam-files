@@ -91,7 +91,7 @@ export function LoginPage() {
         <AnimatedHero />
 
         <footer className="login-visual__footer">
-          <span className="login-credit"><GraduationCap size={16} /> إعداد الأستاذة فاطمة ناجي عبدالعزيز</span>
+          <span className="login-credit">إعداد الأستاذة <GraduationCap size={16} /> فاطمة ناجي عبدالعزيز</span>
           <span>جميع الحقوق محفوظة</span>
         </footer>
       </section>
