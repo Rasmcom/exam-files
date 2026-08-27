@@ -8,6 +8,7 @@ import {
   EyeOff,
   FileLock2,
   Fingerprint,
+  GraduationCap,
   KeyRound,
   LockKeyhole,
   Mail,
@@ -90,7 +91,7 @@ export function LoginPage() {
         <AnimatedHero />
 
         <footer className="login-visual__footer">
-          <span><LockKeyhole size={14} /> الاتصال مشفّر، والملفات غير متاحة للعامة</span>
+          <span className="login-credit"><GraduationCap size={16} /> إعداد الأستاذة فاطمة ناجي عبدالعزيز</span>
           <span>جميع الحقوق محفوظة</span>
         </footer>
       </section>
