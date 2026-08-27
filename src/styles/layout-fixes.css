@@ -143,6 +143,26 @@
   text-align: right;
 }
 
+/* هوية المدرسة والاعتماد في الهيرو. */
+.login-visual .brand-mark__school {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.login-credit {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+.login-credit svg {
+  color: #ffffff;
+  flex: 0 0 auto;
+}
+
 @media (max-width: 1060px) {
   .login-page {
     grid-template-columns: minmax(470px, 1fr) minmax(370px, 0.8fr);
