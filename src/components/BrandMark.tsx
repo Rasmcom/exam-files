@@ -19,7 +19,7 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
       </motion.div>
       <div className="brand-mark__copy">
         <strong>سحابة أعمال الاختبارات</strong>
-        {!compact && <span>أرشيفك الإلكتروني الآمن</span>}
+        {!compact && <span className="brand-mark__school">ثانوية السيدة فاطمة الزهراء بالباحة</span>}
       </div>
     </div>
   )
