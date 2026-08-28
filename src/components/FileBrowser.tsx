@@ -20,8 +20,38 @@ interface FileBrowserProps {
   onDownload: (document: DocumentRecord) => void
   onDelete: (id: string) => void
   onRestore: (id: string) => void
+  onPermanentDelete?: (id: string) => void | Promise<void>
   emptyTitle?: string
   emptyDescription?: string
+}
+
+function TrashMoreMenu({
+  documentId,
+  onPermanentDelete,
+}: {
+  documentId: string
+  onPermanentDelete: (id: string) => void | Promise<void>
+}) {
+  return (
+    <details className="file-more-menu">
+      <summary className="icon-button icon-button--soft" aria-label="المزيد">
+        <MoreHorizontal size={18} />
+      </summary>
+      <div className="file-more-menu__popover">
+        <button
+          type="button"
+          className="file-more-menu__danger"
+          onClick={(event) => {
+            event.currentTarget.closest('details')?.removeAttribute('open')
+            void onPermanentDelete(documentId)
+          }}
+        >
+          <Trash2 size={16} />
+          حذف نهائي
+        </button>
+      </div>
+    </details>
+  )
 }
 
 export function FileBrowser({
@@ -33,6 +63,7 @@ export function FileBrowser({
   onDownload,
   onDelete,
   onRestore,
+  onPermanentDelete = () => undefined,
   emptyTitle = 'لا توجد ملفات هنا',
   emptyDescription = 'ارفع ملفات جديدة أو غيّر معايير البحث.',
 }: FileBrowserProps) {
@@ -107,10 +138,13 @@ export function FileBrowser({
                       </button>
                     </>
                   ) : (
-                    <button type="button" className="restore-button" onClick={() => onRestore(document.id)}>
-                      <RotateCcw size={16} />
-                      استعادة
-                    </button>
+                    <>
+                      <button type="button" className="restore-button" onClick={() => onRestore(document.id)}>
+                        <RotateCcw size={16} />
+                        استعادة
+                      </button>
+                      <TrashMoreMenu documentId={document.id} onPermanentDelete={onPermanentDelete} />
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -148,9 +182,7 @@ export function FileBrowser({
                     <Heart size={17} fill={document.is_favorite ? 'currentColor' : 'none'} />
                   </button>
                 ) : (
-                  <button type="button" className="icon-button icon-button--soft" aria-label="المزيد">
-                    <MoreHorizontal size={18} />
-                  </button>
+                  <TrashMoreMenu documentId={document.id} onPermanentDelete={onPermanentDelete} />
                 )}
               </div>
 
