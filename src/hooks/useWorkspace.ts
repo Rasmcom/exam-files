@@ -22,6 +22,54 @@ const emptyWorkspace: WorkspaceSnapshot = {
   documents: [],
 }
 
+const MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  txt: 'text/plain',
+  csv: 'text/csv',
+  zip: 'application/zip',
+}
+
+function resolveMimeType(file: File, extension: string): string {
+  return MIME_BY_EXTENSION[extension] || file.type || 'application/octet-stream'
+}
+
+function storageUploadErrorMessage(message: string): string {
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes('bucket') && normalized.includes('not found')) {
+    return 'حاوية التخزين غير موجودة أو لم تُجهز بعد'
+  }
+  if (
+    normalized.includes('row-level security')
+    || normalized.includes('rls')
+    || normalized.includes('unauthorized')
+    || normalized.includes('forbidden')
+  ) {
+    return 'صلاحية الرفع في التخزين غير مفعلة للحساب الحالي'
+  }
+  if (normalized.includes('mime') || normalized.includes('content type')) {
+    return 'نوع الملف غير مسموح به في إعدادات التخزين'
+  }
+  if (normalized.includes('too large') || normalized.includes('maximum') || normalized.includes('size')) {
+    return 'حجم الملف يتجاوز الحد المسموح به'
+  }
+  if (normalized.includes('invalid') && normalized.includes('key')) {
+    return 'اسم مسار الملف غير صالح في التخزين'
+  }
+
+  return 'حدث خطأ في خدمة التخزين'
+}
+
 export function useWorkspace() {
   const { user } = useAuth()
   const [workspace, setWorkspace] = useState<WorkspaceSnapshot>(DEMO_MODE ? demoWorkspace : emptyWorkspace)
@@ -234,6 +282,7 @@ export function useWorkspace() {
       }
 
       const now = new Date().toISOString()
+      const mimeType = resolveMimeType(file, extension)
 
       if (DEMO_MODE) {
         const record: DocumentRecord = {
@@ -246,7 +295,7 @@ export function useWorkspace() {
           original_name: file.name,
           display_name: file.name,
           storage_path: `demo/${safeFileName(file.name)}`,
-          mime_type: file.type || 'application/octet-stream',
+          mime_type: mimeType,
           extension,
           size_bytes: file.size,
           status: 'ready',
@@ -263,17 +312,21 @@ export function useWorkspace() {
         continue
       }
 
-      const storagePath = `${user.id}/${crypto.randomUUID()}/${safeFileName(file.name)}`
+      // لا نستخدم الاسم العربي أو المسافات في مفتاح Storage إطلاقًا.
+      // الاسم الأصلي يبقى محفوظًا في documents.original_name/display_name فقط.
+      const storageObjectName = `${crypto.randomUUID()}.${extension}`
+      const storagePath = `${user.id}/${crypto.randomUUID()}/${storageObjectName}`
       const { error: storageError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(storagePath, file, {
-          contentType: file.type || 'application/octet-stream',
+          contentType: mimeType,
           upsert: false,
           cacheControl: '3600',
         })
 
       if (storageError) {
-        toast.error(`تعذر رفع ${file.name}`)
+        console.error('Storage upload failed', storageError)
+        toast.error(`تعذر رفع ${file.name}: ${storageUploadErrorMessage(storageError.message)}`)
         continue
       }
 
@@ -288,7 +341,7 @@ export function useWorkspace() {
           original_name: file.name,
           display_name: file.name,
           storage_path: storagePath,
-          mime_type: file.type || 'application/octet-stream',
+          mime_type: mimeType,
           extension,
           size_bytes: file.size,
           status: 'ready',
@@ -297,8 +350,9 @@ export function useWorkspace() {
         .single()
 
       if (insertError) {
+        console.error('Document metadata insert failed', insertError)
         await supabase.storage.from(STORAGE_BUCKET).remove([storagePath])
-        toast.error(`تعذر حفظ بيانات ${file.name}`)
+        toast.error(`تم رفع الملف إلى التخزين لكن تعذر حفظ بياناته: ${file.name}`)
         continue
       }
 
