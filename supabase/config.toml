@@ -27,3 +27,6 @@ additional_redirect_urls = ["http://localhost:5173"]
 jwt_expiry = 3600
 enable_signup = false
 enable_anonymous_sign_ins = false
+
+[functions.update-owner-email]
+verify_jwt = true
