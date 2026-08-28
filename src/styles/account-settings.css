@@ -1,0 +1,117 @@
+.settings-card--credentials {
+  grid-column: 1 / -1;
+}
+
+.credentials-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 15px;
+  margin-bottom: 18px;
+  border-radius: 13px;
+  background: #f8f7fc;
+  border: 1px solid #ebe8f3;
+}
+
+.credentials-current span {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.credentials-current strong {
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.credentials-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.credentials-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 17px;
+  border: 1px solid #e8e5f0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+}
+
+.credentials-form__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #efedf4;
+}
+
+.credentials-form__title > svg {
+  flex: 0 0 auto;
+  color: var(--violet-600);
+  margin-top: 2px;
+}
+
+.credentials-form__title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.credentials-form__title strong {
+  color: var(--ink);
+  font-size: 11.5px;
+}
+
+.credentials-form__title small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.75;
+}
+
+.credentials-form .primary-button {
+  align-self: flex-start;
+  min-width: 155px;
+  margin-top: 2px;
+}
+
+.credentials-form .field__action {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #89859a;
+  border-radius: 9px;
+  background: transparent;
+}
+
+.credentials-form .field__action:hover {
+  color: var(--violet-700);
+  background: var(--violet-100);
+}
+
+@media (max-width: 900px) {
+  .credentials-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .credentials-current {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .credentials-form {
+    padding: 14px;
+  }
+
+  .credentials-form .primary-button {
+    width: 100%;
+  }
+}
