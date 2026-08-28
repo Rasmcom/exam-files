@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Heart, Trash2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import type { DocumentRecord, WorkspaceTab } from '../types/database'
+import { DEMO_MODE, STORAGE_BUCKET } from '../lib/constants'
+import { supabase } from '../lib/supabase'
 import { FileBrowser } from './FileBrowser'
 import { ViewToolbar } from './ViewToolbar'
 
@@ -26,17 +29,61 @@ export function CollectionView({
   onRestore,
 }: CollectionViewProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [permanentlyDeletedIds, setPermanentlyDeletedIds] = useState<Set<string>>(() => new Set())
   const isTrash = type === 'trash'
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase()
     return documents.filter((document) => {
+      if (permanentlyDeletedIds.has(document.id)) return false
       if (isTrash ? !document.is_deleted : document.is_deleted || !document.is_favorite) return false
       if (!query) return true
       return [document.display_name, document.extension, ...document.tags]
         .some((value) => value.toLowerCase().includes(query))
     })
-  }, [documents, isTrash, search])
+  }, [documents, isTrash, permanentlyDeletedIds, search])
+
+  async function handlePermanentDelete(documentId: string) {
+    const document = documents.find((item) => item.id === documentId)
+    if (!document || !document.is_deleted) return
+
+    const confirmed = window.confirm(
+      `سيتم حذف «${document.display_name}» نهائيًا من التخزين وقاعدة البيانات، ولن يمكن استعادته. هل تريد المتابعة؟`,
+    )
+    if (!confirmed) return
+
+    if (DEMO_MODE) {
+      setPermanentlyDeletedIds((current) => new Set(current).add(documentId))
+      toast.success('تم حذف الملف نهائيًا')
+      return
+    }
+
+    const { error: storageError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([document.storage_path])
+
+    if (storageError) {
+      console.error('Permanent storage delete failed', storageError)
+      toast.error('تعذر حذف الملف من التخزين. لم يتم حذف السجل.')
+      return
+    }
+
+    const { data: deletedRows, error: deleteError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId)
+      .eq('is_deleted', true)
+      .select('id')
+
+    if (deleteError || !deletedRows?.length) {
+      console.error('Permanent document delete failed', deleteError)
+      toast.error('حُذف الملف من التخزين، لكن تعذر حذف سجله من قاعدة البيانات. حاول مرة أخرى.')
+      return
+    }
+
+    setPermanentlyDeletedIds((current) => new Set(current).add(documentId))
+    toast.success('تم حذف الملف نهائيًا')
+  }
 
   return (
     <div className="collection-view">
@@ -71,6 +118,7 @@ export function CollectionView({
         onDownload={onDownload}
         onDelete={onDelete}
         onRestore={onRestore}
+        onPermanentDelete={handlePermanentDelete}
         emptyTitle={isTrash ? 'سلة المحذوفات فارغة' : 'لا توجد ملفات مفضلة'}
         emptyDescription={isTrash
           ? 'الملفات التي تحذفها ستظهر هنا مؤقتًا.'
