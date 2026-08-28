@@ -17,11 +17,11 @@ import {
 import { AnimatedHero } from '../components/AnimatedHero'
 import { BrandMark } from '../components/BrandMark'
 import { useAuth } from '../contexts/AuthContext'
-import { APP_DESCRIPTION, DEMO_MODE, OWNER_EMAIL } from '../lib/constants'
+import { APP_DESCRIPTION, DEMO_MODE } from '../lib/constants'
 
 export function LoginPage() {
   const { signIn, authError, configMissing } = useAuth()
-  const [email, setEmail] = useState(OWNER_EMAIL)
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
