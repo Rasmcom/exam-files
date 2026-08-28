@@ -104,8 +104,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    const enteredEmail = email.trim().toLowerCase()
+    let authEmail = enteredEmail
+
+    // يسمح بتسجيل الدخول بالبريد المحفوظ في إعدادات البوابة، حتى لو كان
+    // بريد Supabase Auth الداخلي للحساب ما زال مختلفًا.
+    const { data: resolvedEmail } = await supabase.rpc('resolve_portal_login_email', {
+      p_email: enteredEmail,
+    })
+
+    if (typeof resolvedEmail === 'string' && resolvedEmail.trim()) {
+      authEmail = resolvedEmail.trim().toLowerCase()
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: authEmail,
       password,
     })
 
