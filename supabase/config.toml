@@ -28,5 +28,7 @@ jwt_expiry = 3600
 enable_signup = false
 enable_anonymous_sign_ins = false
 
-[functions.update-owner-email]
-verify_jwt = true
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+double_confirm_changes = false
