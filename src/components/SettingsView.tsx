@@ -20,7 +20,7 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { DEMO_MODE, STORAGE_BUCKET } from '../lib/constants'
 
 export function SettingsView({ user }: { user: User }) {
-  const email = user.email || 'غير محدد'
+  const [portalEmail, setPortalEmail] = useState(user.email || 'غير محدد')
   const [newEmail, setNewEmail] = useState('')
   const [currentPasswordForEmail, setCurrentPasswordForEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -33,11 +33,26 @@ export function SettingsView({ user }: { user: User }) {
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
 
   useEffect(() => {
-    if (DEMO_MODE || !user.email) return
+    if (DEMO_MODE) {
+      setPortalEmail(user.email || 'غير محدد')
+      return
+    }
+
+    let mounted = true
+
     void supabase
       .from('profiles')
-      .update({ email: user.email, updated_at: new Date().toISOString() })
+      .select('email')
       .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!mounted) return
+        setPortalEmail(data?.email || user.email || 'غير محدد')
+      })
+
+    return () => {
+      mounted = false
+    }
   }, [user.email, user.id])
 
   async function verifyCurrentPassword(password: string) {
@@ -58,8 +73,8 @@ export function SettingsView({ user }: { user: User }) {
       toast.error('أدخل البريد الإلكتروني الجديد')
       return
     }
-    if (normalizedEmail === user.email?.toLowerCase()) {
-      toast.error('البريد الجديد مطابق للبريد الحالي')
+    if (normalizedEmail === portalEmail.toLowerCase()) {
+      toast.error('البريد الجديد مطابق لبريد الدخول الحالي')
       return
     }
     if (!currentPasswordForEmail) {
@@ -75,24 +90,23 @@ export function SettingsView({ user }: { user: User }) {
         return
       }
 
-      const { data, error } = await supabase.auth.updateUser({ email: normalizedEmail })
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email: normalizedEmail,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+
       if (error) {
-        toast.error(error.message.includes('rate') ? 'تم تجاوز عدد المحاولات، حاول لاحقًا' : 'تعذر تغيير البريد الإلكتروني')
+        toast.error(error.code === '23505' ? 'هذا البريد مستخدم مسبقًا' : 'تعذر حفظ بريد الدخول الجديد')
         return
       }
 
+      setPortalEmail(normalizedEmail)
       setNewEmail('')
       setCurrentPasswordForEmail('')
-
-      if (data.user?.email?.toLowerCase() === normalizedEmail) {
-        await supabase
-          .from('profiles')
-          .update({ email: normalizedEmail, updated_at: new Date().toISOString() })
-          .eq('id', user.id)
-        toast.success('تم تغيير البريد الإلكتروني بنجاح')
-      } else {
-        toast.success('تم إرسال طلب تغيير البريد. أكمل التأكيد من رسالة Supabase ثم استخدم البريد الجديد للدخول.', { duration: 6500 })
-      }
+      toast.success('تم تغيير بريد الدخول وحفظه بنجاح')
     } finally {
       setEmailSubmitting(false)
     }
@@ -166,7 +180,7 @@ export function SettingsView({ user }: { user: User }) {
             <span className="owner-profile__avatar">م</span>
             <div>
               <strong>{String(user.user_metadata?.full_name || 'مدير البوابة')}</strong>
-              <span dir="ltr">{email}</span>
+              <span dir="ltr">{portalEmail}</span>
             </div>
             <span className="status-badge status-badge--secure">
               <CheckCircle2 size={14} />
@@ -177,7 +191,7 @@ export function SettingsView({ user }: { user: User }) {
             <LockKeyhole size={18} />
             <p>
               <strong>حساب واحد فقط</strong>
-              <span>الصلاحية مرتبطة بمعرف الحساب داخل قاعدة البيانات، ويمكن تغيير البريد دون فقد الملفات.</span>
+              <span>الصلاحية مرتبطة بمعرف الحساب، ويمكن تغيير بريد الدخول دون فقد الملفات أو الصلاحيات.</span>
             </p>
           </div>
         </section>
@@ -187,13 +201,13 @@ export function SettingsView({ user }: { user: User }) {
             <span><KeyRound size={21} /></span>
             <div>
               <h2>بيانات الدخول</h2>
-              <p>تغيير البريد أو كلمة المرور بطريقة آمنة</p>
+              <p>تغيير بريد الدخول أو كلمة المرور بطريقة آمنة</p>
             </div>
           </header>
 
           <div className="credentials-current">
-            <span>البريد الحالي</span>
-            <strong dir="ltr">{email}</strong>
+            <span>بريد الدخول الحالي</span>
+            <strong dir="ltr">{portalEmail}</strong>
           </div>
 
           <div className="credentials-columns">
@@ -201,8 +215,8 @@ export function SettingsView({ user }: { user: User }) {
               <div className="credentials-form__title">
                 <Mail size={18} />
                 <div>
-                  <strong>تغيير البريد الإلكتروني</strong>
-                  <small>قد يطلب Supabase تأكيد البريد الجديد قبل اعتماده.</small>
+                  <strong>تغيير بريد الدخول</strong>
+                  <small>يُحفظ مباشرة في قاعدة البيانات ويُستخدم في الدخول بعد تسجيل الخروج.</small>
                 </div>
               </div>
 
@@ -248,7 +262,7 @@ export function SettingsView({ user }: { user: User }) {
 
               <button className="primary-button" type="submit" disabled={emailSubmitting || DEMO_MODE}>
                 <Save size={17} />
-                {emailSubmitting ? 'جاري التحقق...' : 'حفظ البريد الجديد'}
+                {emailSubmitting ? 'جاري التحقق...' : 'حفظ بريد الدخول'}
               </button>
             </form>
 
