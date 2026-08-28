@@ -41,14 +41,9 @@ const originalUpdateUser = supabase.auth.updateUser.bind(supabase.auth)
     }
   }
 
-  // إصدار جلسة جديدة حتى ينعكس البريد فورًا في كامل الواجهة.
-  const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
-  if (refreshError) {
-    return {
-      data: { user: data?.user ?? null },
-      error: refreshError,
-    }
-  }
+  // نحاول إصدار جلسة جديدة حتى ينعكس البريد فورًا في كامل الواجهة.
+  // إذا تأخر تحديث الجلسة لا نعتبر تغيير البريد فاشلًا لأن التغيير الإداري تم بالفعل.
+  const { data: refreshed } = await supabase.auth.refreshSession()
 
   return {
     data: { user: refreshed.user ?? data?.user ?? null },
